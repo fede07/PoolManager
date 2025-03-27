@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+      DB_HOST: db
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
+      DB_PORT: 5432
+    volumes:
+      - ".:/rails"
+    depends_on:
+      - db # Asegura que PostgreSQL esté operativo antes de lanzar Rails
+    command: ./bin/rails server -b 0.0.0.0 -p 3000
+
+  db:
+    image: postgres:15 # La versión de PostgreSQL que deseas usar
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+volumes:
+  pg_data: # Volumen para persistir los datos de la base de datos
