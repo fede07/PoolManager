@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   app:
     build:
@@ -15,18 +14,18 @@ services:
     volumes:
       - ".:/rails"
     depends_on:
-      - db # Asegura que PostgreSQL esté operativo antes de lanzar Rails
+      - db
     command: ./bin/rails server -b 0.0.0.0 -p 3000
 
   db:
-    image: postgres:15 # La versión de PostgreSQL que deseas usar
+    image: postgres:15
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - pg_data:/var/lib/postgresql/data
 
 volumes:
-  pg_data: # Volumen para persistir los datos de la base de datos
+  pg_data:

@@ -88,7 +88,7 @@ production:
   primary: &primary_production
     <<: *default
     database: pool_manager_production
-    username: pool_manager
+    username: <%= ENV["DB_USERNAME"] %>
     password: <%= ENV["DB_PASSWORD"] %>
   cache:
     <<: *primary_production

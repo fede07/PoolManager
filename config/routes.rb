@@ -7,4 +7,11 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "posts#index"
+
+  namespace :api do
+    resources :players, only: [ :index, :show, :update, :destroy ]
+
+    get /players/me, to: "players#me"
+    patch /players/me, to: "players#update_me"
+  end
 end
