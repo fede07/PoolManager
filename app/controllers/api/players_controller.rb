@@ -3,29 +3,28 @@ class Api::PlayersController < ApplicationController
 
   # GET /players/me
   def me
-    render json: current_user
+    render json: PlayerService.get_current_player(request.headers["Authorization"])
   end
 
   # GET /api/players
   def index
-    @players = Player.all
-    @players = @players.where("name LIKE ?", "%#{params[:search]}%") if params[:search].present?
-    render json: @players
+    players = PlayerService.search_players(params[:search_query])
+    render json: players
   end
 
   # POST /api/players
   def create
-    @player = Player.new(player_params)
-    if @player.save
-      render json: @player, status: :created, location: @player
+    player = PlayerService.create_player(player_params)
+    if player
+      render json: player, status: :created, location: player
     else
-      render json: @player.errors.full_messages, status: :bad_request
+      render json: { message: player.errors.full_messages }, status: :bad_request
     end
   end
 
   # DELETE /api/players/:id
   def destroy
-    if @player.destroy
+    if PlayerService.delete_player(params[:id])
       render json: { message: "Player deleted" }, status: :ok
     else
       render json: { message: "Player not found" }, status: :not_found
