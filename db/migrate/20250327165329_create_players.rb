@@ -11,4 +11,3 @@ class CreatePlayers < ActiveRecord::Migration[8.0]
     add_index :players, :auth0_id, unique: true
   end
 end
-
