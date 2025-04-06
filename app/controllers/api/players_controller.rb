@@ -39,7 +39,13 @@ class Api::PlayersController < ApplicationController
     auth0_id = @decoded_token.token[0]["sub"]
     player = PlayerService.get_current_player(auth0_id)
     if player
-      PlayerService.update_player(player)
+      if PlayerService.update_player(player, player_update_params)
+        render json: { message: "Player updated" }, status: :ok
+      else
+        render json: { message: player.errors.full_messages }, status: :internal_server_error
+      end
+    else
+      render json: { message: "Player not found" }, status: :not_found
     end
   end
 
@@ -66,5 +72,9 @@ class Api::PlayersController < ApplicationController
 
   def player_params
     params.require(:player).permit(:auth0_id, :name, :ranking, :preferred_cue, :profile_picture_url)
+  end
+
+  def player_update_params
+    params.require(:player).permit(:name, :ranking, :preferred_cue, :profile_picture_url)
   end
 end

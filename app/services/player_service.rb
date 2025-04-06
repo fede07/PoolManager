@@ -15,10 +15,9 @@ class PlayerService
     PlayerRepository.create(player)
   end
 
-  def self.update_player(params)
-    player = PlayerRepository.find_by_id(params[:id])
-    update_player = PlayerRepository.update(player)
-    update_player
+  def self.update_player(player, updated_params)
+    player.assign_attributes(updated_params)
+    PlayerRepository.update(player)
   end
 
   def self.delete_player(player)
