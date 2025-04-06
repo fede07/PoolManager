@@ -32,7 +32,7 @@ class Auth0Client
 
     def validate_permissions(permissions)
       required_permissions = Set.new permissions
-      scopes = token[0]["scope"]
+      # scopes = token[0]["scope"]
       token_permissions =
         if token[0]["permissions"].present?
           Set.new(token[0]["permissions"])
