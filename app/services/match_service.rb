@@ -55,7 +55,7 @@ class MatchService
     date = nil
     if params[:date].present?
       begin
-        date = Date.parse(params[:date])
+        date = Time.parse(params[:date])
       rescue
         return { success: false, status: :bad_request, message: "Invalid date" }
       end
@@ -109,7 +109,7 @@ class MatchService
 
     if update_params[:end_time].present?
       begin
-        Date.parse(update_params[:end_time])
+        Time.parse(update_params[:end_time])
       rescue
         return { success: false, status: :bad_request, message: "Invalid end time" }
       end

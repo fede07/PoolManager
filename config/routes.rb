@@ -27,10 +27,12 @@ Rails.application.routes.draw do
     delete "/players", to: "players#destroy"
 
     post "/matches", to: "matches#create"
-    get "matches", to: "matches#index"
-    get "matches/:id", to: "matches#show"
-    patch "matches/:id", to: "matches#update"
-    put "matches/:id", to: "matches#update"
-    delete "matches/:id", to: "matches#destroy"
+    get "/matches", to: "matches#index"
+    get "/matches/:id", to: "matches#show"
+    patch "/matches/:id", to: "matches#update"
+    put "/matches/:id", to: "matches#update"
+    delete "/matches/:id", to: "matches#destroy"
+
+    post "/uploads", to: "uploads#generate_presigned_url"
   end
 end
