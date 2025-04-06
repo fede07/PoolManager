@@ -33,7 +33,14 @@ class Auth0Client
     def validate_permissions(permissions)
       required_permissions = Set.new permissions
       scopes = token[0]["scope"]
-      token_permissions = scopes.present? ? Set.new(scopes.split(" ")) : Set.new
+      token_permissions =
+        if token[0]["permissions"].present?
+          Set.new(token[0]["permissions"])
+        elsif token[0]["scope"].present?
+          Set.new(token[0]["scope"].split(" "))
+        else
+          Set.new
+        end
       required_permissions <= token_permissions
     end
   end

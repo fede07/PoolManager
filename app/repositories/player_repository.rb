@@ -11,6 +11,10 @@ class PlayerRepository
     Player.create(player)
   end
 
+  def self.update(player)
+    player.save
+  end
+
   def self.destroy(player)
     player.destroy
   end

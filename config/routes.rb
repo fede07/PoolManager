@@ -11,7 +11,14 @@ Rails.application.routes.draw do
   namespace :api do
     resources :players, only: [ :index, :show, :update, :destroy ]
 
-    get /players/me, to: "players#me"
-    patch /players/me, to: "players#update_me"
+    post "auth/register", to: "auth#register"
+
+    post "/players", to: "players#create"
+    get "/players", to: "players#index"
+    get "/players/me", to: "players#me"
+    patch "/players/me", to: "players#update_me"
+    put "/players/me", to: "players#update_me"
+    delete "/players", to: "players#destroy"
+
   end
 end
