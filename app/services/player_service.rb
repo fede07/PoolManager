@@ -1,6 +1,5 @@
 class PlayerService
   def self.get_current_player(auth_id)
-    Rails.logger.info auth_id
     PlayerRepository.find_by_auth0_id(auth_id)
   end
 

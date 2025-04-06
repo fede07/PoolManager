@@ -20,6 +20,6 @@ class PlayerRepository
   end
 
   def self.find_by_id(id)
-    Player.find_by(id)
+    Player.find_by(id: id)
   end
 end

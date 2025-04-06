@@ -66,10 +66,6 @@ class Api::PlayersController < ApplicationController
 
   private
 
-  def set_player
-    @player = Player.find(params[:id])
-  end
-
   def player_params
     params.require(:player).permit(:auth0_id, :name, :ranking, :preferred_cue, :profile_picture_url)
   end

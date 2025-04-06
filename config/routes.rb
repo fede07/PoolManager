@@ -1,4 +1,9 @@
 Rails.application.routes.draw do
+  get "matches/index"
+  get "matches/show"
+  get "matches/create"
+  get "matches/update"
+  get "matches/destroy"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
@@ -9,7 +14,8 @@ Rails.application.routes.draw do
   # root "posts#index"
 
   namespace :api do
-    resources :players, only: [ :index, :show, :update, :destroy ]
+    resources :players, only: [ :index, :show, :create, :update, :destroy ]
+    resources :matches, only: [ :index, :show, :create, :update, :destroy ]
 
     post "auth/register", to: "auth#register"
 
@@ -20,5 +26,11 @@ Rails.application.routes.draw do
     put "/players/me", to: "players#update_me"
     delete "/players", to: "players#destroy"
 
+    post "/matches", to: "matches#create"
+    get "matches", to: "matches#index"
+    get "matches/:id", to: "matches#show"
+    patch "matches/:id", to: "matches#update"
+    put "matches/:id", to: "matches#update"
+    delete "matches/:id", to: "matches#destroy"
   end
 end
