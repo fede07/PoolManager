@@ -1,0 +1,110 @@
+---
+openapi: 3.0.1
+info:
+  title: API V1
+  version: v1
+paths:
+  "/api/matches":
+    get:
+      summary: list matches
+      responses:
+        '200':
+          description: successful
+    post:
+      summary: create match
+      responses:
+        '200':
+          description: successful
+  "/api/matches/{id}":
+    parameters:
+    - name: id
+      in: path
+      description: id
+      required: true
+      schema:
+        type: string
+    get:
+      summary: show match
+      responses:
+        '200':
+          description: successful
+    patch:
+      summary: update match
+      responses:
+        '200':
+          description: successful
+    put:
+      summary: update match
+      responses:
+        '200':
+          description: successful
+    delete:
+      summary: delete match
+      responses:
+        '200':
+          description: successful
+  "/api/players":
+    get:
+      summary: list players
+      responses:
+        '200':
+          description: successful
+    post:
+      summary: create player
+      responses:
+        '200':
+          description: successful
+    delete:
+      summary: delete player
+      responses:
+        '200':
+          description: successful
+  "/api/players/{id}":
+    parameters:
+    - name: id
+      in: path
+      description: id
+      required: true
+      schema:
+        type: string
+    get:
+      summary: show player
+      responses:
+        '200':
+          description: successful
+    patch:
+      summary: update player
+      responses:
+        '200':
+          description: successful
+    put:
+      summary: update player
+      responses:
+        '200':
+          description: successful
+    delete:
+      summary: delete player
+      responses:
+        '200':
+          description: successful
+  "/api/players/me":
+    get:
+      summary: me player
+      responses:
+        '200':
+          description: successful
+    patch:
+      summary: update_me player
+      responses:
+        '200':
+          description: successful
+    put:
+      summary: update_me player
+      responses:
+        '200':
+          description: successful
+servers:
+- url: https://{defaultHost}
+  variables:
+    defaultHost:
+      default: localhost:3000
