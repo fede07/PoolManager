@@ -1,6 +1,6 @@
 class PlayerService
-  def self.get_player_by_auth0_id(auth_id)
-    player = PlayerRepository.find_by_auth0_id(auth_id)
+  def self.get_player_by_auth0_id(auth0_id)
+    player = PlayerRepository.find_by_auth0_id(auth0_id)
     if player.nil?
       return { success: false, status: :not_found, message: "Player not found" }
     end
@@ -31,6 +31,8 @@ class PlayerService
   end
 
   def self.update_player_me(auth0_id, updated_params)
+    Rails.logger.info("auth0_id:")
+    Rails.logger.info(auth0_id)
     player = PlayerRepository.find_by_auth0_id(auth0_id)
     if player.nil?
       return { success: false, status: :not_found, message: "Player not found" }

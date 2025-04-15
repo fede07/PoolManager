@@ -16,17 +16,16 @@ Rails.application.routes.draw do
   # root "posts#index"
 
   namespace :api do
+    get "/players/me", to: "players#me"
+    patch "/players/me/", to: "players#update_me"
+    put "/players/me/", to: "players#update_me"
     resources :players, only: [ :index, :create, :update, :destroy ]
     resources :matches, only: [ :index, :show, :create, :update, :destroy ]
 
     post "auth/register", to: "auth#register"
-
+    delete "/players", to: "players#destroy"
     post "/players", to: "players#create"
     get "/players", to: "players#index"
-    get "/players/me", to: "players#me"
-    patch "/players/me", to: "players#update_me"
-    put "/players/me", to: "players#update_me"
-    delete "/players", to: "players#destroy"
 
     post "/matches", to: "matches#create"
     get "/matches", to: "matches#index"

@@ -24,19 +24,19 @@ class Api::PlayersController < ApplicationController
     render json: result, status: result[:status]
   end
 
+  # UPDATE/PUT /players/me/
+  def update_me
+    auth0_id = @decoded_token.token[0]["sub"]
+    result = PlayerService.update_player_me(auth0_id, player_update_params)
+    render json: result, status: result[:status]
+  end
+
   # UPDATE/PUT /players/:id
   def update
     validate_permissions [ "update:players" ] do
       result = PlayerService.update_player(params[:id], player_params)
       render json: result, status: result[:status]
     end
-  end
-
-  # UPDATE/PUT /players/me
-  def update_me
-    auth0_id = @decoded_token.token[0]["sub"]
-    result = PlayerService.update_player_me(auth0_id, player_update_params)
-    render json: result, status: result[:status]
   end
 
   # DELETE /api/players/:id
@@ -54,6 +54,6 @@ class Api::PlayersController < ApplicationController
 
   private
   def player_update_params
-    params.permit(:name, :ranking, :preferred_cue, :profile_picture_url)
+    params.permit(:name, :preferred_cue, :profile_picture_url)
   end
 end
