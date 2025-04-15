@@ -52,6 +52,8 @@ class MatchService
   end
 
   def self.get_matches(params)
+    player_id = params[:player_id].present? ? params[:player_id] : nil
+
     date = nil
     if params[:date].present?
       begin
@@ -67,7 +69,7 @@ class MatchService
         return { success: false, status: :bad_request, message: "Invalid status" }
       end
     end
-    matches = MatchRepository.filtered_matches(date: date, status: status)
+    matches = MatchRepository.filtered_matches(date: date, status: status, player_id: player_id)
     matches
   end
 
@@ -80,6 +82,11 @@ class MatchService
   end
 
   def self.update_match(match_id, update_params)
+    match = MatchRepository.get_match(match_id)
+    if match.nil?
+      return { success: false, status: :not_found, message: "Match not found" }
+    end
+
     player1_id = update_params[:player1_id]
     if update_params[:player1_id]
       player1_id = update_params[:player1_id]
@@ -96,7 +103,7 @@ class MatchService
     end
 
     if player1_id.present? && player2_id.present? && player1_id == player2_id
-      return { success: false, status: :bad_request, message: "Player cannot play against themselves" }
+      return { success: false, status: :conflict, message: "Player cannot play against themselves" }
     end
 
     if update_params[:start_time].present?
@@ -118,13 +125,8 @@ class MatchService
     if update_params[:winner_id].present?
       winner_id = update_params[:winner_id]
       if PlayerRepository.find_by_id(winner_id).nil?
-        return { success: false, status: :not_found, message: "Winner id not found" }
+        return { success: false, status: :not_found, message: "Winner ID not found" }
       end
-    end
-
-    match = MatchRepository.get_match(match_id)
-    if match.nil?
-      return { success: false, status: :not_found, message: "Match not found" }
     end
 
     MatchRepository.update(match_id, update_params)
@@ -146,7 +148,7 @@ class MatchService
     end
 
     if match.start_time < Time.now
-      return { success: false, status: :bad_request, message: "Match cannot be deleted if already started" }
+      return { success: false, status: :conflict, message: "Match cannot be deleted if already started" }
     end
 
     MatchRepository.delete(match_id)

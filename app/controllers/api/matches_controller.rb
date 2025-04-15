@@ -11,27 +11,29 @@ class Api::MatchesController < ApplicationController
   def show
     match_id = params[:id]
     match = MatchService.get_match(match_id)
-    render json: match
+    status = match[:status]
+    render json: match, status: status
   end
 
   # POST /matches
   def create
-    Rails.logger.info("Creating match")
-    Rails.logger.info(match_params)
     result = MatchService.create_match(match_params)
-    render json: result
+    status = result[:status]
+    render json: result, status: status
   end
 
   # PATCH/PUT /matches/:id
   def update
     result = MatchService.update_match(params[:id], match_update_params)
-    render json: result
+    status = result[:status]
+    render json: result, status: status
   end
 
   # DELETE /matches/:id
   def destroy
     result = MatchService.delete_match(params[:id])
-    render json: result
+    status = result[:status]
+    render json: result, status: status
   end
 
   private

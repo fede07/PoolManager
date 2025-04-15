@@ -17,8 +17,12 @@ class MatchRepository
          .where("start_time BETWEEN ? AND ?", start_time, end_time)
   end
 
-  def self.filtered_matches(date: nil, status: nil)
+  def self.filtered_matches(date: nil, status: nil, player_id: nil)
     matches = Match.all
+
+    if player_id.present?
+      matches = matches.where("player1_id = :player_id OR player2_id = :player_id", player_id: player_id)
+    end
 
     if date.present?
       matches = matches.where("start_time BETWEEN ? AND ?", date.beginning_of_day, date.end_of_day)

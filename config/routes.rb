@@ -1,6 +1,6 @@
 Rails.application.routes.draw do
-  mount Rswag::Ui::Engine => '/api-docs'
-  mount Rswag::Api::Engine => '/api-docs'
+  mount Rswag::Ui::Engine => "/api-docs"
+  mount Rswag::Api::Engine => "/api-docs"
   get "matches/index"
   get "matches/show"
   get "matches/create"
@@ -16,7 +16,7 @@ Rails.application.routes.draw do
   # root "posts#index"
 
   namespace :api do
-    resources :players, only: [ :index, :show, :create, :update, :destroy ]
+    resources :players, only: [ :index, :create, :update, :destroy ]
     resources :matches, only: [ :index, :show, :create, :update, :destroy ]
 
     post "auth/register", to: "auth#register"

@@ -3,12 +3,14 @@ class PlayerRepository
     Player.find_by(auth0_id: auth0_id)
   end
 
-  def self.all_players
-    Player.all
+  def self.all_players(player_name = nil)
+    players = Player.all
+    players = players.where("name ILIKE ?", "%#{player_name}%") if player_name.present?
+    players
   end
 
-  def self.create(player)
-    Player.create(player)
+  def self.create(player_attributes)
+    Player.create(player_attributes)
   end
 
   def self.update(player)
