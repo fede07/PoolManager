@@ -1,110 +1,909 @@
 ---
 openapi: 3.0.1
 info:
-  title: API V1
+  title: Pool Manager V1
   version: v1
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []
 paths:
   "/api/matches":
     get:
-      summary: list matches
+      tags:
+        - Matches
+      summary: List Matches
+      security:
+        - bearerAuth: [ ]
+      description: Retrieve a list of all available matches. Supports optional filters via query parameters.
+      parameters:
+        - name: player_id
+          in: query
+          description: Filter matches by player ID.
+          required: false
+          schema:
+            type: string
+        - name: date
+          in: query
+          description: Filter matches starting from a specific date (YYYY-MM-DD format).
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: status
+          in: query
       responses:
         '200':
-          description: successful
+          description: Successfully retrieved the list of matches.
+          content:
+            application/json:
+              example:
+                matches:
+                  - id: "1"
+                    player1_id: "100"
+                    player2_id: "101"
+                    start_time: "2023-11-01T10:00:00Z"
+                    end_time: "2023-11-01T11:30:00Z"
+                    table_number: 5
+                  - id: "2"
+                    player1_id: "102"
+                    player2_id: "103"
+                    start_time: "2023-11-02T12:30:00Z"
+                    end_time: "2023-11-02T14:00:00Z"
+                    table_number: 3
+        '400':
+          description: Invalid query parameters provided.
+        '401':
+          description: Authorization required.
+        '500':
+          description: Internal server error.
     post:
-      summary: create match
+      tags:
+        - Matches
+      summary: Create Match
+      security:
+        - bearerAuth: [ ]
+      description: |
+        This endpoint allows the creation of a new match between two players.
+        The match data must include the IDs of the players, the start time, and the table number.
+        Optionally, you can also provide the `end_time`.
+        
+        Please note:
+          - `player1_id` and `player2_id` must be different players.
+          - Conflicts will occur if either player's schedule overlaps with the new match's start and end time.
+      #          - The `table_number` must be unique for the specific time range.
+      parameters:
+        - name: player1_id
+          in: query
+          description: ID of Player 1.
+          required: true
+          example: "100"
+          schema:
+            type: string
+        - name: player2_id
+          in: query
+          description: ID of Player 2
+          required: true
+          example: "101"
+          schema:
+            type: string
+        - name: start_time
+          in: query
+          required: true
+          example: "2023-12-01T10:00:00Z"
+          schema:
+            type: string
+        - name: end_time
+          in: query
+          example: "2023-12-01T11:00:00Z"
+          schema:
+            type: string
+        - name: table_number
+          in: query
+          required: true
+          example: 5
+          schema:
+            type: number
       responses:
-        '200':
-          description: successful
+        '201':
+          description: Match successfully created.
+          content:
+            application/json:
+              example:
+                id: "3"
+                player1_id: "100"
+                player2_id: "101"
+                start_time: "2023-12-01T10:00:00Z"
+                end_time: "2023-12-01T11:30:00Z"
+                table_number: 5
+        '400':
+          description: Invalid request body or missing parameters.
+          content:
+            application/json:
+              examples:
+                missing_parameters:
+                  summary: Missing required fields
+                  value:
+                    success: false
+                    status: "bad_request"
+                    message: "Missing required parameters"
+                invalid_format:
+                  summary: Invalid data format
+                  value:
+                    success: false
+                    status: "bad_request"
+                    message: "Invalid start time"
+        '401':
+          description: Authorization required, missing or invalid token.
+          content:
+            application/json:
+              example:
+                message: "Requires authentication"
+        '404':
+          description: One or both players were not found.
+          content:
+            application/json:
+              example:
+                success: false
+                status: "not_found"
+                message: "Player 1 not found"
+        '409':
+          description: Time conflict with existing matches.
+          content:
+            application/json:
+              example:
+                success: false
+                status: "conflict"
+                message: "Double booking not allowed"
+        '500':
+          description: Unexpected internal server error.
   "/api/matches/{id}":
     parameters:
-    - name: id
-      in: path
-      description: id
-      required: true
-      schema:
-        type: string
+      - name: id
+        in: path
+        description: Match ID
+        required: true
+        example: 5
+        schema:
+          type: string
     get:
-      summary: show match
+      tags:
+        - Matches
+      summary: Get a single Match
+      description: Get details of a single match.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Match ID
+          required: true
+          schema:
+            type: string
+          example: 100
       responses:
         '200':
-          description: successful
+          description: "Successfully retrieved match"
+          content:
+            application/json:
+              example:
+                success: true
+                status: ok
+                match:
+                  id: 100
+                  player1_id: 10
+                  player2_id: 20
+                  start_time: "2025-04-07T18:00:00.000Z"
+                  end_time: null
+                  winner_id: null
+                  table_number: 3
+                  created_at: "2025-04-06T20:42:40.066Z"
+                  updated_at: "2025-04-06T20:42:40.066Z"
+        '401':
+          description: Authorization required, missing or invalid token.
+          content:
+            application/json:
+              example:
+                message: "Requires authentication"
+        '404':
+          description: "Match not found"
+          content:
+            application/json:
+              example:
+                success: false
+                status: not_found
+                message: "Match not found"
+
     patch:
-      summary: update match
+      tags:
+        - Matches
+      summary: Update Match
+      description: Update a match's details.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          example: 100
+          schema:
+            type: string
+        - name: player1_id
+          in: query
+          example: 10
+          schema:
+            type: string
+        - name: player2_id
+          in: query
+          example: 20
+          schema:
+            type: string
+        - name: start_time
+          in: query
+          example: "2023-12-01T09:00:00Z"
+          schema:
+            type: string
+        - name: end_time
+          in: query
+          example: "2023-12-01T10:00:00Z"
+          schema:
+            type: string
+        - name: table_number
+          in: query
+          example: 3
+          schema:
+            type: number
+        - name: winner_id
+          in: query
+          example: 100
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
       responses:
         '200':
-          description: successful
+          description: Successfully updated match's details
+          content:
+            application/json:
+              example:
+                success: true
+                status: ok
+        '400':
+          description: The request contains invalid data
+          content:
+            application/json:
+              examples:
+                invalid_start_time:
+                  summary: Invalid start time
+                  description: The request contains an invalid start time.
+                  value:
+                    success: false
+                    status: bad_request
+                    message: Invalid start time
+                invalid_end_time:
+                  summary: Invalid end time
+                  description: The request contains an invalid end time.
+                  value:
+                    success: false
+                    status: bad_request
+                    message: Invalid end time
+        '401':
+          description: Authorization required, missing or invalid token.
+          content:
+            application/json:
+              example:
+                message: "Requires authentication"
+        '404':
+          description: The requested resource was not found
+          content:
+            application/json:
+              examples:
+                match_not_found:
+                  summary: Match ID not found
+                  value:
+                    success: false
+                    status: not_found
+                    message: Match not found
+                player1_not_found:
+                  summary: Player 1 ID not found
+                  value:
+                    success: false
+                    status: not_found
+                    message: Player 1 not found
+                player2_not_found:
+                  summary: Player 2 ID not found
+                  value:
+                    success: false
+                    status: not_found
+                    message: Player 2 not found
+                winner_not_found:
+                  summary: Winner ID not found
+                  value:
+                    success: false
+                    status: not_found
+                    message: Winner ID not found
+
+        '409':
+          description: Conflict. Players cannot play against themselves.
+          content:
+            application/json:
+              example:
+                success: false
+                status: conflict
+                message: Player cannot play against themselves
     put:
-      summary: update match
+      tags:
+        - Matches
+      summary: Update Match
+      description: Update a match's details.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          example: 100
+          schema:
+            type: string
+        - name: player1_id
+          in: query
+          example: 10
+          schema:
+            type: string
+        - name: player2_id
+          in: query
+          example: 20
+          schema:
+            type: string
+        - name: start_time
+          in: query
+          example: "2023-12-01T09:00:00Z"
+          schema:
+            type: string
+        - name: end_time
+          in: query
+          example: "2023-12-01T10:00:00Z"
+          schema:
+            type: string
+        - name: table_number
+          in: query
+          example: 3
+          schema:
+            type: number
+        - name: winner_id
+          in: query
+          example: 100
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
       responses:
         '200':
-          description: successful
+          description: Successfully updated match's details
+          content:
+            application/json:
+              example:
+                success: true
+                status: ok
+        '400':
+          description: The request contains invalid data
+          content:
+            application/json:
+              examples:
+                invalid_start_time:
+                  summary: Invalid start time
+                  description: The request contains an invalid start time.
+                  value:
+                    success: false
+                    status: bad_request
+                    message: Invalid start time
+                invalid_end_time:
+                  summary: Invalid end time
+                  description: The request contains an invalid end time.
+                  value:
+                    success: false
+                    status: bad_request
+                    message: Invalid end time
+        '401':
+          description: Authorization required, missing or invalid token.
+          content:
+            application/json:
+              example:
+                message: "Requires authentication"
+        '404':
+          description: The requested resource was not found
+          content:
+            application/json:
+              examples:
+                match_not_found:
+                  summary: Match ID not found
+                  value:
+                    success: false
+                    status: not_found
+                    message: Match not found
+                player1_not_found:
+                  summary: Player 1 ID not found
+                  value:
+                    success: false
+                    status: not_found
+                    message: Player 1 not found
+                player2_not_found:
+                  summary: Player 2 ID not found
+                  value:
+                    success: false
+                    status: not_found
+                    message: Player 2 not found
+                winner_not_found:
+                  summary: Winner ID not found
+                  value:
+                    success: false
+                    status: not_found
+                    message: Winner ID not found
+
+        '409':
+          description: Conflict. Players cannot play against themselves.
+          content:
+            application/json:
+              example:
+                success: false
+                status: conflict
+                message: Player cannot play against themselves
     delete:
-      summary: delete match
+      tags:
+        - Matches
+      summary: Delete a Match
+      security:
+        - bearerAuth: []
+      description: "Deletes a match using the provided ID. This operation requires authentication and proper permissions. 
+      If the ID is invalid or the match cannot be found, an appropriate error will be returned. 
+      ⚠ WARNING: Deleted matches cannot be recovered!"
       responses:
         '200':
-          description: successful
+          description: Match deleted successfully
+          content:
+            application/json:
+              example:
+                success: true
+                status: ok
+        '409':
+          description: The match cannot be deleted because it has already started.
+          content:
+            application/json:
+              example:
+                success: false
+                status: conflict
+                message: Match cannot be deleted if already started
   "/api/players":
     get:
-      summary: list players
+      tags:
+        - Players
+      summary: List Players
+      security:
+        - bearerAuth: []
+      description: Retrieves the list of players. Admin only.
+      parameters:
+        - name: player_name
+          in: query
+          description: Name of player to filter with.
+          schema:
+            type: string
       responses:
         '200':
-          description: successful
+          description: Successfully retrieved the list of players.
+          content:
+            application/json:
+              example:
+              - id: 4
+                auth0_id: auth0|67f1b0ed8da33a730a3c71e1
+                name: Chiki
+                ranking: 1
+                preferred_cue: cue3
+                profile_picture_url: profile_pictures/auth0|67f1b0ed8da33a730a3c71e0/auth0|67f1b0ed8da33a730a3c71e0_62f5acf2-7683-4a2e-a3c7-c8e34cff0288.jpg
+                created_at: "2025-04-06T17:15:13.058Z"
+                updated_at: "2025-04-14T14:04:41.845Z"
+        '401':
+          description: Missing or invalid token.
+          content:
+            application/json:
+              example:
+                message: Requires authentication
+        '403':
+          description: Insufficient permissions. The provided token does not have the required permissions to access this content.
+          content:
+            application/json:
+              example:
+                error: insufficient_permissions
+                error_description: The access token does not contain the required permissions
+                message: Permission denied
     post:
-      summary: create player
+      tags:
+        - Players
+      security:
+        - bearerAuth: []
+      summary: Create player manually
+      description: Create a player manually (admin only).
+      parameters:
+        - name: auth0_id
+          in: query
+          description: User ID from Auth0.
+          required: true
+          schema:
+            type: string
+        - name: name
+          in: query
+          description: Player name.
+          required: true
+          schema:
+            type: string
+        - name: ranking
+          in: query
+          required: false
+          schema:
+            type: number
+        - name: preferred_cue
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: profile_picture_url
+          in: query
+          required: true
+          schema:
+            type: string
       responses:
         '200':
-          description: successful
-    delete:
-      summary: delete player
-      responses:
-        '200':
-          description: successful
+          description: Successfully created player
+          content:
+            application/json:
+              example:
+                success: true
+                status: created
+                player:
+                  id: 1
+                  auth0_id: auth0|67f1b0ed8da33a730a3c71e3
+                  name: John Doe
+                  ranking: 1
+                  preferred_cue: 18
+                  profile_picture_url: profile_pictures/auth0|...
+                  created_at: "2025-04-14T17:50:24.859Z"
+                  updated_at: "2025-04-14T17:50:24.859Z"
+        '401':
+          description: Missing or invalid token.
+          content:
+            application/json:
+              example:
+                message: Requires authentication
+        '403':
+          description: Insufficient permissions. The provided token does not have the required permissions to access this content.
+          content:
+            application/json:
+              example:
+                error: insufficient_permissions
+                error_description: The access token does not contain the required permissions
+                message: Permission denied
+        '409':
+          description: Conflict. Auth0 ID already present in database
+          content:
+            application/json:
+              example:
+                success: false
+                status: conflict
+                message: Player already exists
   "/api/players/{id}":
     parameters:
-    - name: id
-      in: path
-      description: id
-      required: true
-      schema:
-        type: string
-    get:
-      summary: show player
-      responses:
-        '200':
-          description: successful
+      - name: id
+        in: path
+        description: id
+        required: true
+        schema:
+          type: string
     patch:
-      summary: update player
+      summary: Update player
+      tags:
+        - Players
+      description: Update player (Admin only).
+      parameters:
+        - name: auth0_id
+          in: query
+          description: User ID from Auth0.
+          required: false
+          schema:
+            type: string
+        - name: name
+          in: query
+          description: Player name.
+          required: false
+          schema:
+            type: string
+        - name: ranking
+          in: query
+          description: Player ranking.
+          required: false
+          schema:
+            type: number
+        - name: preferred_cue
+          in: query
+          description: Player's preferred cue.
+          required: false
+          schema:
+            type: string
+        - name: profile_picture_url
+          in: query
+          description: Player's profile picture's url.
+          required: false
+          schema:
+            type: string
       responses:
         '200':
-          description: successful
+          description: Successfully updated player
+          content:
+            application/json:
+              example:
+                success: true
+                status: ok
+                player:
+                  id: 5
+                  auth_id: auth0|67f1...
+                  name: John Doe
+                  ranking: 1
+                  profile_picture_url: profile_pictures/auth0|67...
+                  created_at: "2025-04-14T17:32:04.698Z"
+                  updated_at: "2025-04-15T14:18:17.661Z"
+        '401':
+          description: Missing or invalid token.
+          content:
+            application/json:
+              example:
+                message: Requires authentication
+        '403':
+          description: Insufficient permissions. The provided token does not have the required permissions to access this content.
+          content:
+            application/json:
+              example:
+                error: insufficient_permissions
+                error_description: The access token does not contain the required permissions
+                message: Permission denied
+        '404':
+          description: Player not found.
+          content:
+            application/json:
+              example:
+                success: false
+                status: not_found
+                message: Player not found
     put:
-      summary: update player
+      summary: Update player
+      tags:
+        - Players
+      description: Update player (Admin only).
+      parameters:
+        - name: auth0_id
+          in: query
+          description: User ID from Auth0.
+          required: false
+          schema:
+            type: string
+        - name: name
+          in: query
+          description: Player name.
+          required: false
+          schema:
+            type: string
+        - name: ranking
+          in: query
+          description: Player ranking.
+          required: false
+          schema:
+            type: number
+        - name: preferred_cue
+          in: query
+          description: Player's preferred cue.
+          required: false
+          schema:
+            type: string
+        - name: profile_picture_url
+          in: query
+          description: Player's profile picture's url.
+          required: false
+          schema:
+            type: string
       responses:
         '200':
-          description: successful
+          description: Successfully updated player
+          content:
+            application/json:
+              example:
+                success: true
+                status: ok
+                player:
+                  id: 5
+                  auth_id: auth0|67f1...
+                  name: John Doe
+                  ranking: 1
+                  profile_picture_url: profile_pictures/auth0|67...
+                  created_at: "2025-04-14T17:32:04.698Z"
+                  updated_at: "2025-04-15T14:18:17.661Z"
+        '401':
+          description: Missing or invalid token.
+          content:
+            application/json:
+              example:
+                message: Requires authentication
+        '403':
+          description: Insufficient permissions. The provided token does not have the required permissions to access this content.
+          content:
+            application/json:
+              example:
+                error: insufficient_permissions
+                error_description: The access token does not contain the required permissions
+                message: Permission denied
+        '404':
+          description: Player not found.
+          content:
+            application/json:
+              example:
+                success: false
+                status: not_found
+                message: Player not found
     delete:
-      summary: delete player
+      tags:
+        - Players
+      security:
+        - bearerAuth: []
+      summary: Delete player
+      description: "Deletes a player using the provided ID. This operation requires authentication and proper permissions. If the ID is invalid or the match cannot be found, an appropriate error will be returned. 
+      ⚠ WARNING: Deleted matches cannot be recovered!"
       responses:
         '200':
-          description: successful
-  "/api/players/me":
+          description: Successfully deleted player
+          content:
+            application/json:
+              example:
+                success: true
+                status: ok
+        '401':
+          description: Missing or invalid token.
+          content:
+            application/json:
+              example:
+                message: Requires authentication
+        '404':
+          description: Player not found
+          content:
+            application/json:
+              example:
+                success: false
+                status: not_found
+                message: Player not found
+  "/api/players/me/":
     get:
-      summary: me player
+      tags:
+        - Me
+      summary: My info
+      description: Gets current player info.
+      security:
+        - bearerAuth: []
       responses:
         '200':
-          description: successful
+          description: Successfully retrieved player info.
+          content:
+            application/json:
+              example:
+                success: true
+                status: ok
+                player:
+                  id: 1
+                  auth0_id: "auth0|67..."
+                  name: "John Doe"
+                  ranking: 1
+                  preferred_cue: 18
+                  profile_picture_url: "user.jpg"
+                  created_at: "2025-04-05T23:55:21.232Z"
+                  updated_at: "2025-04-06T21:41:31.950Z"
+        '401':
+          description: Missing or invalid token.
+          content:
+            application/json:
+              example:
+                message: Requires authentication
     patch:
-      summary: update_me player
+      tags:
+        - Me
+      security:
+        - bearerAuth: []
+      summary: Update my info
+      description: Update the authenticated user's player details.
+      parameters:
+        - name: name
+          in: query
+          description: Player name.
+          required: false
+          schema:
+            type: string
+        - name: preferred_cue
+          in: query
+          description: Player's preferred cue.
+          required: false
+          schema:
+            type: string
+        - name: profile_picture_url
+          in: query
+          description: Player's profile picture's url.
+          required: false
+          schema:
+            type: string
       responses:
         '200':
-          description: successful
+          description: Successfully updated player's details.
+          content:
+            application/json:
+              example:
+                success: true
+                status: ok
+                player:
+                  id: 5
+                  auth_id: auth0|67f1...
+                  name: John Doe
+                  ranking: 1
+                  profile_picture_url: profile_pictures/auth0|67...
+                  created_at: "2025-04-14T17:32:04.698Z"
+                  updated_at: "2025-04-15T14:18:17.661Z"
+        '401':
+          description: Missing or invalid token.
+          content:
+            application/json:
+              example:
+                message: Requires authentication
     put:
-      summary: update_me player
+      tags:
+        - Me
+      security:
+        - bearerAuth: []
+      summary: Update my info
+      description: Update the authenticated user's player details.
+      parameters:
+        - name: name
+          in: query
+          description: Player name.
+          required: false
+          schema:
+            type: string
+        - name: preferred_cue
+          in: query
+          description: Player's preferred cue.
+          required: false
+          schema:
+            type: string
+        - name: profile_picture_url
+          in: query
+          description: Player's profile picture's url.
+          required: false
+          schema:
+            type: string
       responses:
         '200':
-          description: successful
+          description: Successfully updated player's details.
+          content:
+            application/json:
+              example:
+                success: true
+                status: ok
+                player:
+                  id: 5
+                  auth_id: auth0|67f1...
+                  name: John Doe
+                  ranking: 1
+                  profile_picture_url: profile_pictures/auth0|67...
+                  created_at: "2025-04-14T17:32:04.698Z"
+                  updated_at: "2025-04-15T14:18:17.661Z"
+        '401':
+          description: Missing or invalid token.
+          content:
+            application/json:
+              example:
+                message: Requires authentication
 servers:
-- url: https://{defaultHost}
+- url: http://{defaultHost}
   variables:
     defaultHost:
       default: localhost:3000
