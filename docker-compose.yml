@@ -11,6 +11,7 @@ services:
       DB_USERNAME: postgres
       DB_PASSWORD: password
       DB_PORT: 5432
+      APPLICATION_HOST: ${RAILS_HOSTS}
     volumes:
       - ".:/rails"
     depends_on:

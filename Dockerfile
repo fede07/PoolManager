@@ -3,7 +3,7 @@
 
 # This Dockerfile is designed for production, not development. Use with Kamal or build'n'run by hand:
 # docker build -t pool_manager .
-# docker run -d -p 80:80 -e RAILS_MASTER_KEY=589ba18b797f5e3b559614a55f80d344 --name pool_manager pool_manager
+# docker run -d -p 80:80 -e --name pool_manager pool_manager
 
 # For a containerized dev environment, see Dev Containers: https://guides.rubyonrails.org/getting_started_with_devcontainer.html
 
