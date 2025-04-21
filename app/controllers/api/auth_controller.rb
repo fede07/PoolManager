@@ -4,7 +4,7 @@ class Api::AuthController < ApplicationController
   # POST auth/register
   def register
     authorize
-    result = AuthService.register(@decoded_token)
+    result = AuthService.register(@decoded_token, @token)
 
     if result[:success]
       render json: { message: "Player created successfully", player: result[:player] }, status: result[:status]
