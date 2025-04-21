@@ -38,4 +38,22 @@ class AuthService
       raise "Failed to fetch user info"
     end
   end
+
+  def self.exchange_code_for_token(code)
+    uri = URI("https://#{ENV['AUTH0_DOMAIN']}/oauth/token")
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+
+    headers = { 'Content-Type': "application/json" }
+    body = {
+      grant_type: "authorization_code",
+      client_id: ENV["AUTH0_CLIENT_ID"],
+      client_secret: ENV["AUTH0_CLIENT_SECRET"],
+      code: code,
+      redirect_uri: ENV["ROOT_URL"] + "/api/auth/callback"
+    }
+
+    response = http.post(uri.path, body.to_json, headers)
+    JSON.parse(response.body)
+  end
 end

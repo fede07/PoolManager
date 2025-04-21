@@ -1,12 +1,8 @@
 Rails.application.routes.draw do
   mount Rswag::Ui::Engine => "/api-docs"
   mount Rswag::Api::Engine => "/api-docs"
-  get "matches/index"
-  get "matches/show"
-  get "matches/create"
-  get "matches/update"
-  get "matches/destroy"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
+  root "api/auth#redirect_to_auth0"
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
@@ -16,6 +12,10 @@ Rails.application.routes.draw do
   # root "posts#index"
 
   namespace :api do
+    get "/", to: "auth#redirect_to_auth0"
+    get "/auth/callback", to: "auth#callback"
+    get "/auth/logout", to: "auth#logout"
+
     get "/players/me", to: "players#me"
     patch "/players/me/", to: "players#update_me"
     put "/players/me/", to: "players#update_me"
