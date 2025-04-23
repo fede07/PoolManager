@@ -27,7 +27,7 @@ ENV RAILS_ENV="development" \
 
 # Throw-away build stage to reduce size of final image
 FROM base AS build
-
+RUN mkdir -p /usr/local/bundle && chmod -R 777 /usr/local/bundle
 # Install packages needed to build gems
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev pkg-config && \

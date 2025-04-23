@@ -1,7 +1,7 @@
 ---
 openapi: 3.0.1
 info:
-  title: Pool Manager V1
+  title: Pool Manager
   version: v1
 components:
   securitySchemes:
@@ -9,9 +9,544 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: |
+        1. Go to the main page. You will automatically be redirected to the Auth0 login page.
+        2. Log in with your credentials.
+        3. Once authenticated, you will be redirected to the callback endpoint, where you will see a JSON response containing the `access_token`.
+        4. Copy the `access_token` from the response, without the quotes.
+        5. Paste the `access_token` into the following container.
 security:
   - bearerAuth: []
 paths:
+  "/api/auth/register":
+    post:
+      tags:
+        - Auth
+      summary: Register a new player
+      description: |
+        Registers a new user in the system by creating a player profile automatically. 
+        The user must be authenticated via Auth0, and their `id_token` or `access_token` must be included in the request headers.
+  
+        The registration process:
+        - Validates the provided token.
+        - Fetches user information from Auth0 (e.g., nickname, profile picture).
+        - Creates the player in the database if they don't already exist.
+        
+        **Important:**
+        - If the player already exists, the operation is terminated with a conflict status.
+        - This operation requires a valid JWT token from Auth0 to identify the user.
+
+      security:
+        - bearerAuth: []
+
+      responses:
+        '201':
+          description: Player created successfully.
+          content:
+            application/json:
+              example:
+                message: "Player created successfully"
+                player:
+                  id: 1
+                  auth0_id: "auth0|5f4e4f7c9a79ff001e68fbf5"
+                  name: "JohnDoe"
+                  profile_picture_url: "https://example.com/images/johndoe.png"
+                  ranking: 0
+                  preferred_cue: null
+                  created_at: "2023-10-05T12:50:20Z"
+                  updated_at: "2023-10-05T12:50:20Z"
+        '409':
+          description: Player already exists in the system.
+          content:
+            application/json:
+              example:
+                success: false
+                status: "conflict"
+                message: "Player already exists"
+        '401':
+          description: Unauthorized. Token is missing or invalid.
+          content:
+            application/json:
+              example:
+                message: "Requires authentication"
+        '500':
+          description: Internal server error. Something went wrong during the registration process.
+          content:
+            application/json:
+              example:
+                success: false
+                status: "error"
+                message: "Failed to create player"
+  "/api/auth/logout":
+    get:
+      tags:
+        - Auth
+      summary: Logout the user from Auth0
+      description: |
+        Logs out the currently authenticated user by redirecting them to Auth0's logout URL.
+        After logging out, the user will be redirected to the defined return URL (usually the application homepage).
+
+        Note: This operation does not handle authentication tokens directly; it solely relies on the Auth0-provided logout functionality.
+        
+        **Important**: This endpoint performs a redirection (HTTP 302) and cannot be tested directly via Swagger UI. For testing, open the URL in a web browser.
+
+      responses:
+        '302':
+          description: Redirects to the Auth0 logout endpoint.
+          headers:
+            Location:
+              description: The URL to which the user is redirected (Auth0 logout URL).
+              schema:
+                type: string
+        '500':
+          description: Internal server error or if Auth0 settings are misconfigured.
+  "/api/players/me/":
+    get:
+      tags:
+        - Me
+      summary: Retrieve current player's information
+      description: |
+          Retrieves the details of the currently authenticated player. This includes information such as the player's name, ranking, preferred cue, profile picture, and timestamps for their creation and last update.
+          
+          **Note:**
+          - The player is identified based on the authenticated `auth0_id` provided in the token.
+          - Requires a valid JWT token in the `Authorization` header.
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Successfully retrieved the player's information.
+          content:
+            application/json:
+              example:
+                success: true
+                status: ok
+                player:
+                  id: 1
+                  auth0_id: "auth0|67..."
+                  name: "John Doe"
+                  ranking: 1
+                  preferred_cue: 18
+                  profile_picture_url: "user.jpg"
+                  created_at: "2025-04-05T23:55:21.232Z"
+                  updated_at: "2025-04-06T21:41:31.950Z"
+        '401':
+          description: Missing or invalid token. The user must be authenticated to fetch their information.
+          content:
+            application/json:
+              example:
+                message: Requires authentication
+    patch:
+      tags:
+        - Me
+      security:
+        - bearerAuth: [ ]
+      summary: Update current player's information
+      description: |
+        Updates specific details of the currently authenticated user's player profile. Any provided field will be updated without affecting the others.
+        
+        **Available fields for updating:**
+        - `name`: The player's name.
+        - `preferred_cue`: The player's preferred cue (e.g., "Cue A").
+        - `profile_picture_url`: URL to the player's profile picture.
+        
+        **Note:**
+        - All fields are optional.
+        - Requires a valid JWT token in the `Authorization` header.
+      parameters:
+        - name: name
+          in: query
+          description: The new name for the player.
+          required: false
+          schema:
+            type: string
+          example: "Johnny Doe"
+        - name: preferred_cue
+          in: query
+          description: The new preferred cue of the player.
+          required: false
+          schema:
+            type: string
+          example: "Cue B"
+        - name: profile_picture_url
+          in: query
+          description: URL to the player's new profile picture.
+          required: false
+          schema:
+            type: string
+          example: "https://example.com/updated-picture.jpg"
+      responses:
+        '200':
+          description: Successfully updated player's details.
+          content:
+            application/json:
+              example:
+                success: true
+                status: ok
+                player:
+                  id: 5
+                  auth_id: auth0|67f1...
+                  name: John Doe
+                  ranking: 1
+                  profile_picture_url: profile_pictures/auth0|67...
+                  created_at: "2025-04-14T17:32:04.698Z"
+                  updated_at: "2025-04-15T14:18:17.661Z"
+        '401':
+          description: Missing or invalid token.
+          content:
+            application/json:
+              example:
+                message: Requires authentication
+    put:
+      tags:
+        - Me
+      security:
+        - bearerAuth: [ ]
+      summary: Update my info
+      description: Update the authenticated user's player details.
+      parameters:
+        - name: name
+          in: query
+          description: Player name.
+          required: false
+          schema:
+            type: string
+        - name: preferred_cue
+          in: query
+          description: Player's preferred cue.
+          required: false
+          schema:
+            type: string
+        - name: profile_picture_url
+          in: query
+          description: Player's profile picture's url.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully updated player's details.
+          content:
+            application/json:
+              example:
+                success: true
+                status: ok
+                player:
+                  id: 5
+                  auth_id: auth0|67f1...
+                  name: John Doe
+                  ranking: 1
+                  profile_picture_url: profile_pictures/auth0|67...
+                  created_at: "2025-04-14T17:32:04.698Z"
+                  updated_at: "2025-04-15T14:18:17.661Z"
+        '401':
+          description: Missing or invalid token.
+          content:
+            application/json:
+              example:
+                message: Requires authentication
+  "/api/players":
+    get:
+      tags:
+        - Players
+      summary: List Players
+      security:
+        - bearerAuth: [ ]
+      description: Retrieves the list of players. Admin only.
+      parameters:
+        - name: player_name
+          in: query
+          description: Name of player to filter with.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved the list of players.
+          content:
+            application/json:
+              example:
+                - id: 4
+                  auth0_id: auth0|67f1b0ed8da33a730a3c71e1
+                  name: Chiki
+                  ranking: 1
+                  preferred_cue: cue3
+                  profile_picture_url: profile_pictures/auth0|67f1b0ed8da33a730a3c71e0/auth0|67f1b0ed8da33a730a3c71e0_62f5acf2-7683-4a2e-a3c7-c8e34cff0288.jpg
+                  created_at: "2025-04-06T17:15:13.058Z"
+                  updated_at: "2025-04-14T14:04:41.845Z"
+        '401':
+          description: Missing or invalid token.
+          content:
+            application/json:
+              example:
+                message: Requires authentication
+        '403':
+          description: Insufficient permissions. The provided token does not have the required permissions to access this content.
+          content:
+            application/json:
+              example:
+                error: insufficient_permissions
+                error_description: The access token does not contain the required permissions
+                message: Permission denied
+    post:
+      tags:
+        - Players
+      security:
+        - bearerAuth: [ ]
+      summary: Create player manually
+      description: Create a player manually (admin only).
+      parameters:
+        - name: auth0_id
+          in: query
+          description: User ID from Auth0.
+          required: true
+          schema:
+            type: string
+        - name: name
+          in: query
+          description: Player name.
+          required: true
+          schema:
+            type: string
+        - name: ranking
+          in: query
+          required: false
+          schema:
+            type: number
+        - name: preferred_cue
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: profile_picture_url
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully created player
+          content:
+            application/json:
+              example:
+                success: true
+                status: created
+                player:
+                  id: 1
+                  auth0_id: auth0|67f1b0ed8da33a730a3c71e3
+                  name: John Doe
+                  ranking: 1
+                  preferred_cue: 18
+                  profile_picture_url: profile_pictures/auth0|...
+                  created_at: "2025-04-14T17:50:24.859Z"
+                  updated_at: "2025-04-14T17:50:24.859Z"
+        '401':
+          description: Missing or invalid token.
+          content:
+            application/json:
+              example:
+                message: Requires authentication
+        '403':
+          description: Insufficient permissions. The provided token does not have the required permissions to access this content.
+          content:
+            application/json:
+              example:
+                error: insufficient_permissions
+                error_description: The access token does not contain the required permissions
+                message: Permission denied
+        '409':
+          description: Conflict. Auth0 ID already present in database
+          content:
+            application/json:
+              example:
+                success: false
+                status: conflict
+                message: Player already exists
+  "/api/players/{id}":
+    parameters:
+      - name: id
+        in: path
+        description: id
+        required: true
+        schema:
+          type: string
+    patch:
+      summary: Update player
+      tags:
+        - Players
+      description: Update player (Admin only).
+      parameters:
+        - name: auth0_id
+          in: query
+          description: User ID from Auth0.
+          required: false
+          schema:
+            type: string
+        - name: name
+          in: query
+          description: Player name.
+          required: false
+          schema:
+            type: string
+        - name: ranking
+          in: query
+          description: Player ranking.
+          required: false
+          schema:
+            type: number
+        - name: preferred_cue
+          in: query
+          description: Player's preferred cue.
+          required: false
+          schema:
+            type: string
+        - name: profile_picture_url
+          in: query
+          description: Player's profile picture's url.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully updated player
+          content:
+            application/json:
+              example:
+                success: true
+                status: ok
+                player:
+                  id: 5
+                  auth_id: auth0|67f1...
+                  name: John Doe
+                  ranking: 1
+                  profile_picture_url: profile_pictures/auth0|67...
+                  created_at: "2025-04-14T17:32:04.698Z"
+                  updated_at: "2025-04-15T14:18:17.661Z"
+        '401':
+          description: Missing or invalid token.
+          content:
+            application/json:
+              example:
+                message: Requires authentication
+        '403':
+          description: Insufficient permissions. The provided token does not have the required permissions to access this content.
+          content:
+            application/json:
+              example:
+                error: insufficient_permissions
+                error_description: The access token does not contain the required permissions
+                message: Permission denied
+        '404':
+          description: Player not found.
+          content:
+            application/json:
+              example:
+                success: false
+                status: not_found
+                message: Player not found
+    put:
+      summary: Update player
+      tags:
+        - Players
+      description: Update player (Admin only).
+      parameters:
+        - name: auth0_id
+          in: query
+          description: User ID from Auth0.
+          required: false
+          schema:
+            type: string
+        - name: name
+          in: query
+          description: Player name.
+          required: false
+          schema:
+            type: string
+        - name: ranking
+          in: query
+          description: Player ranking.
+          required: false
+          schema:
+            type: number
+        - name: preferred_cue
+          in: query
+          description: Player's preferred cue.
+          required: false
+          schema:
+            type: string
+        - name: profile_picture_url
+          in: query
+          description: Player's profile picture's url.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully updated player
+          content:
+            application/json:
+              example:
+                success: true
+                status: ok
+                player:
+                  id: 5
+                  auth_id: auth0|67f1...
+                  name: John Doe
+                  ranking: 1
+                  profile_picture_url: profile_pictures/auth0|67...
+                  created_at: "2025-04-14T17:32:04.698Z"
+                  updated_at: "2025-04-15T14:18:17.661Z"
+        '401':
+          description: Missing or invalid token.
+          content:
+            application/json:
+              example:
+                message: Requires authentication
+        '403':
+          description: Insufficient permissions. The provided token does not have the required permissions to access this content.
+          content:
+            application/json:
+              example:
+                error: insufficient_permissions
+                error_description: The access token does not contain the required permissions
+                message: Permission denied
+        '404':
+          description: Player not found.
+          content:
+            application/json:
+              example:
+                success: false
+                status: not_found
+                message: Player not found
+    delete:
+      tags:
+        - Players
+      security:
+        - bearerAuth: [ ]
+      summary: Delete player
+      description: "Deletes a player using the provided ID. This operation requires authentication and proper permissions. If the ID is invalid or the match cannot be found, an appropriate error will be returned. 
+      ⚠ WARNING: Deleted matches cannot be recovered!"
+      responses:
+        '200':
+          description: Successfully deleted player
+          content:
+            application/json:
+              example:
+                success: true
+                status: ok
+        '401':
+          description: Missing or invalid token.
+          content:
+            application/json:
+              example:
+                message: Requires authentication
+        '404':
+          description: Player not found
+          content:
+            application/json:
+              example:
+                success: false
+                status: not_found
+                message: Player not found
   "/api/matches":
     get:
       tags:
@@ -454,9 +989,11 @@ paths:
       summary: Delete a Match
       security:
         - bearerAuth: []
-      description: "Deletes a match using the provided ID. This operation requires authentication and proper permissions. 
-      If the ID is invalid or the match cannot be found, an appropriate error will be returned. 
-      ⚠ WARNING: Deleted matches cannot be recovered!"
+      description: |
+        Deletes a match using the provided ID. This operation requires authentication and proper permissions. 
+        If the ID is invalid or the match cannot be found, an appropriate error will be returned. 
+        
+        **⚠ WARNING:** Deleted matches cannot be recovered!
       responses:
         '200':
           description: Match deleted successfully
@@ -473,437 +1010,10 @@ paths:
                 success: false
                 status: conflict
                 message: Match cannot be deleted if already started
-  "/api/players":
-    get:
-      tags:
-        - Players
-      summary: List Players
-      security:
-        - bearerAuth: []
-      description: Retrieves the list of players. Admin only.
-      parameters:
-        - name: player_name
-          in: query
-          description: Name of player to filter with.
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successfully retrieved the list of players.
-          content:
-            application/json:
-              example:
-              - id: 4
-                auth0_id: auth0|67f1b0ed8da33a730a3c71e1
-                name: Chiki
-                ranking: 1
-                preferred_cue: cue3
-                profile_picture_url: profile_pictures/auth0|67f1b0ed8da33a730a3c71e0/auth0|67f1b0ed8da33a730a3c71e0_62f5acf2-7683-4a2e-a3c7-c8e34cff0288.jpg
-                created_at: "2025-04-06T17:15:13.058Z"
-                updated_at: "2025-04-14T14:04:41.845Z"
-        '401':
-          description: Missing or invalid token.
-          content:
-            application/json:
-              example:
-                message: Requires authentication
-        '403':
-          description: Insufficient permissions. The provided token does not have the required permissions to access this content.
-          content:
-            application/json:
-              example:
-                error: insufficient_permissions
-                error_description: The access token does not contain the required permissions
-                message: Permission denied
-    post:
-      tags:
-        - Players
-      security:
-        - bearerAuth: []
-      summary: Create player manually
-      description: Create a player manually (admin only).
-      parameters:
-        - name: auth0_id
-          in: query
-          description: User ID from Auth0.
-          required: true
-          schema:
-            type: string
-        - name: name
-          in: query
-          description: Player name.
-          required: true
-          schema:
-            type: string
-        - name: ranking
-          in: query
-          required: false
-          schema:
-            type: number
-        - name: preferred_cue
-          in: query
-          required: false
-          schema:
-            type: string
-        - name: profile_picture_url
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successfully created player
-          content:
-            application/json:
-              example:
-                success: true
-                status: created
-                player:
-                  id: 1
-                  auth0_id: auth0|67f1b0ed8da33a730a3c71e3
-                  name: John Doe
-                  ranking: 1
-                  preferred_cue: 18
-                  profile_picture_url: profile_pictures/auth0|...
-                  created_at: "2025-04-14T17:50:24.859Z"
-                  updated_at: "2025-04-14T17:50:24.859Z"
-        '401':
-          description: Missing or invalid token.
-          content:
-            application/json:
-              example:
-                message: Requires authentication
-        '403':
-          description: Insufficient permissions. The provided token does not have the required permissions to access this content.
-          content:
-            application/json:
-              example:
-                error: insufficient_permissions
-                error_description: The access token does not contain the required permissions
-                message: Permission denied
-        '409':
-          description: Conflict. Auth0 ID already present in database
-          content:
-            application/json:
-              example:
-                success: false
-                status: conflict
-                message: Player already exists
-  "/api/players/{id}":
-    parameters:
-      - name: id
-        in: path
-        description: id
-        required: true
-        schema:
-          type: string
-    patch:
-      summary: Update player
-      tags:
-        - Players
-      description: Update player (Admin only).
-      parameters:
-        - name: auth0_id
-          in: query
-          description: User ID from Auth0.
-          required: false
-          schema:
-            type: string
-        - name: name
-          in: query
-          description: Player name.
-          required: false
-          schema:
-            type: string
-        - name: ranking
-          in: query
-          description: Player ranking.
-          required: false
-          schema:
-            type: number
-        - name: preferred_cue
-          in: query
-          description: Player's preferred cue.
-          required: false
-          schema:
-            type: string
-        - name: profile_picture_url
-          in: query
-          description: Player's profile picture's url.
-          required: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successfully updated player
-          content:
-            application/json:
-              example:
-                success: true
-                status: ok
-                player:
-                  id: 5
-                  auth_id: auth0|67f1...
-                  name: John Doe
-                  ranking: 1
-                  profile_picture_url: profile_pictures/auth0|67...
-                  created_at: "2025-04-14T17:32:04.698Z"
-                  updated_at: "2025-04-15T14:18:17.661Z"
-        '401':
-          description: Missing or invalid token.
-          content:
-            application/json:
-              example:
-                message: Requires authentication
-        '403':
-          description: Insufficient permissions. The provided token does not have the required permissions to access this content.
-          content:
-            application/json:
-              example:
-                error: insufficient_permissions
-                error_description: The access token does not contain the required permissions
-                message: Permission denied
-        '404':
-          description: Player not found.
-          content:
-            application/json:
-              example:
-                success: false
-                status: not_found
-                message: Player not found
-    put:
-      summary: Update player
-      tags:
-        - Players
-      description: Update player (Admin only).
-      parameters:
-        - name: auth0_id
-          in: query
-          description: User ID from Auth0.
-          required: false
-          schema:
-            type: string
-        - name: name
-          in: query
-          description: Player name.
-          required: false
-          schema:
-            type: string
-        - name: ranking
-          in: query
-          description: Player ranking.
-          required: false
-          schema:
-            type: number
-        - name: preferred_cue
-          in: query
-          description: Player's preferred cue.
-          required: false
-          schema:
-            type: string
-        - name: profile_picture_url
-          in: query
-          description: Player's profile picture's url.
-          required: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successfully updated player
-          content:
-            application/json:
-              example:
-                success: true
-                status: ok
-                player:
-                  id: 5
-                  auth_id: auth0|67f1...
-                  name: John Doe
-                  ranking: 1
-                  profile_picture_url: profile_pictures/auth0|67...
-                  created_at: "2025-04-14T17:32:04.698Z"
-                  updated_at: "2025-04-15T14:18:17.661Z"
-        '401':
-          description: Missing or invalid token.
-          content:
-            application/json:
-              example:
-                message: Requires authentication
-        '403':
-          description: Insufficient permissions. The provided token does not have the required permissions to access this content.
-          content:
-            application/json:
-              example:
-                error: insufficient_permissions
-                error_description: The access token does not contain the required permissions
-                message: Permission denied
-        '404':
-          description: Player not found.
-          content:
-            application/json:
-              example:
-                success: false
-                status: not_found
-                message: Player not found
-    delete:
-      tags:
-        - Players
-      security:
-        - bearerAuth: []
-      summary: Delete player
-      description: "Deletes a player using the provided ID. This operation requires authentication and proper permissions. If the ID is invalid or the match cannot be found, an appropriate error will be returned. 
-      ⚠ WARNING: Deleted matches cannot be recovered!"
-      responses:
-        '200':
-          description: Successfully deleted player
-          content:
-            application/json:
-              example:
-                success: true
-                status: ok
-        '401':
-          description: Missing or invalid token.
-          content:
-            application/json:
-              example:
-                message: Requires authentication
-        '404':
-          description: Player not found
-          content:
-            application/json:
-              example:
-                success: false
-                status: not_found
-                message: Player not found
-  "/api/players/me/":
-    get:
-      tags:
-        - Me
-      summary: My info
-      description: Gets current player info.
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Successfully retrieved player info.
-          content:
-            application/json:
-              example:
-                success: true
-                status: ok
-                player:
-                  id: 1
-                  auth0_id: "auth0|67..."
-                  name: "John Doe"
-                  ranking: 1
-                  preferred_cue: 18
-                  profile_picture_url: "user.jpg"
-                  created_at: "2025-04-05T23:55:21.232Z"
-                  updated_at: "2025-04-06T21:41:31.950Z"
-        '401':
-          description: Missing or invalid token.
-          content:
-            application/json:
-              example:
-                message: Requires authentication
-    patch:
-      tags:
-        - Me
-      security:
-        - bearerAuth: []
-      summary: Update my info
-      description: Update the authenticated user's player details.
-      parameters:
-        - name: name
-          in: query
-          description: Player name.
-          required: false
-          schema:
-            type: string
-        - name: preferred_cue
-          in: query
-          description: Player's preferred cue.
-          required: false
-          schema:
-            type: string
-        - name: profile_picture_url
-          in: query
-          description: Player's profile picture's url.
-          required: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successfully updated player's details.
-          content:
-            application/json:
-              example:
-                success: true
-                status: ok
-                player:
-                  id: 5
-                  auth_id: auth0|67f1...
-                  name: John Doe
-                  ranking: 1
-                  profile_picture_url: profile_pictures/auth0|67...
-                  created_at: "2025-04-14T17:32:04.698Z"
-                  updated_at: "2025-04-15T14:18:17.661Z"
-        '401':
-          description: Missing or invalid token.
-          content:
-            application/json:
-              example:
-                message: Requires authentication
-    put:
-      tags:
-        - Me
-      security:
-        - bearerAuth: []
-      summary: Update my info
-      description: Update the authenticated user's player details.
-      parameters:
-        - name: name
-          in: query
-          description: Player name.
-          required: false
-          schema:
-            type: string
-        - name: preferred_cue
-          in: query
-          description: Player's preferred cue.
-          required: false
-          schema:
-            type: string
-        - name: profile_picture_url
-          in: query
-          description: Player's profile picture's url.
-          required: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successfully updated player's details.
-          content:
-            application/json:
-              example:
-                success: true
-                status: ok
-                player:
-                  id: 5
-                  auth_id: auth0|67f1...
-                  name: John Doe
-                  ranking: 1
-                  profile_picture_url: profile_pictures/auth0|67...
-                  created_at: "2025-04-14T17:32:04.698Z"
-                  updated_at: "2025-04-15T14:18:17.661Z"
-        '401':
-          description: Missing or invalid token.
-          content:
-            application/json:
-              example:
-                message: Requires authentication
+
 servers:
-- url: http://{defaultHost}
+- url: http://localhost:3000
+- url: https://{defaultHost}
   variables:
     defaultHost:
       default: localhost:3000

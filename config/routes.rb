@@ -15,6 +15,7 @@ Rails.application.routes.draw do
     get "/", to: "auth#redirect_to_auth0"
     get "/auth/callback", to: "auth#callback"
     get "/auth/logout", to: "auth#logout"
+    post "auth/register", to: "auth#register"
 
     get "/players/me", to: "players#me"
     patch "/players/me/", to: "players#update_me"
@@ -22,7 +23,6 @@ Rails.application.routes.draw do
     resources :players, only: [ :index, :create, :update, :destroy ]
     resources :matches, only: [ :index, :show, :create, :update, :destroy ]
 
-    post "auth/register", to: "auth#register"
     delete "/players", to: "players#destroy"
     post "/players", to: "players#create"
     get "/players", to: "players#index"
