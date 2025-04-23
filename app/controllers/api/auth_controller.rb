@@ -38,7 +38,7 @@ class Api::AuthController < ApplicationController
     audience = ENV["AUTH0_AUDIENCE"]
     redirect_uri = ENV["ROOT_URL"] + "/api/auth/callback"
     response_type = "code"
-    scope = ""
+    scope = "openid profile email"
     nonce = SecureRandom.urlsafe_base64(32)
     state = SecureRandom.urlsafe_base64(32)
     "https://#{domain}/authorize?response_type=#{response_type}&client_id=#{client_id}&redirect_uri=#{redirect_uri}&scope=#{scope}&nonce=#{nonce}&state=#{state}&audience=#{audience}"
