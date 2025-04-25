@@ -12,9 +12,9 @@ components:
       description: |
         1. Go to the main page. You will automatically be redirected to the Auth0 login page.
         2. Log in with your credentials.
-        3. Once authenticated, you will be redirected to the callback endpoint, where you will see a JSON response containing the `access_token`.
-        4. Copy the `access_token` from the response, without the quotes.
-        5. Paste the `access_token` into the following container.
+        3. Once authenticated, you will be redirected to the swagger documentation.
+        
+        To logout, go to /api/auth/logout
 security:
   - bearerAuth: []
 paths:
@@ -160,21 +160,18 @@ paths:
           required: false
           schema:
             type: string
-          example: "Johnny Doe"
         - name: preferred_cue
           in: query
           description: The new preferred cue of the player.
           required: false
           schema:
             type: string
-          example: "Cue B"
         - name: profile_picture_url
           in: query
           description: URL to the player's new profile picture.
           required: false
           schema:
             type: string
-          example: "https://example.com/updated-picture.jpg"
       responses:
         '200':
           description: Successfully updated player's details.
@@ -570,7 +567,11 @@ paths:
             type: string
             format: date
         - name: status
+          description: Filter matches by status. Allowed status are upcoming | ongoing | completed
+          required: false
           in: query
+          schema:
+            type: string
       responses:
         '200':
           description: Successfully retrieved the list of matches.
