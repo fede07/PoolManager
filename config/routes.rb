@@ -15,7 +15,7 @@ Rails.application.routes.draw do
     get "/", to: "auth#redirect_to_auth0"
     get "/auth/callback", to: "auth#callback"
     get "/auth/logout", to: "auth#logout"
-    post "auth/register", to: "auth#register"
+    post "/auth/register", to: "auth#register"
 
     get "/players/me", to: "players#me"
     patch "/players/me/", to: "players#update_me"
@@ -34,6 +34,6 @@ Rails.application.routes.draw do
     put "/matches/:id", to: "matches#update"
     delete "/matches/:id", to: "matches#destroy"
 
-    post "/uploads", to: "uploads#generate_presigned_url"
+    post "/players/upload", to: "uploads#generate_presigned_url"
   end
 end

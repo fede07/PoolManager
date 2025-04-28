@@ -544,6 +544,29 @@ paths:
                 success: false
                 status: not_found
                 message: Player not found
+  "/api/players/upload":
+    post:
+      tags:
+        - Players
+      summary: Generate profile picture upload link
+      security:
+        - bearerAuth: []
+      description: Generates an s3 presigned url for users to upload their profile pictures.
+      responses:
+        '200':
+          description: Successfully created link
+          content:
+            application/json:
+              example:
+                url: "https://pool-manager-images.s3.amazonaws.com/profile_pictures..."
+                key: "profile_picture/..."
+        '401':
+          description: Authorization required, missing or invalid token.
+          content:
+            application/json:
+              example:
+                message: "Requires authentication"
+
   "/api/matches":
     get:
       tags:
@@ -594,7 +617,11 @@ paths:
         '400':
           description: Invalid query parameters provided.
         '401':
-          description: Authorization required.
+          description: Authorization required, missing or invalid token.
+          content:
+            application/json:
+              example:
+                message: "Requires authentication"
         '500':
           description: Internal server error.
     post:
