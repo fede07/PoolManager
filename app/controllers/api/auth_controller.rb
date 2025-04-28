@@ -21,13 +21,14 @@ class Api::AuthController < ApplicationController
     code = params[:code]
     token_response = AuthService.exchange_code_for_token(code)
     access_token = token_response["access_token"]
-    if access_token
-      # redirect_url="#{swagger_url}?token=#{access_token}"
-      # redirect_to redirect_url, allow_other_host: true
-      # render json: { message: "Authenticated successfully", token: token_response }
+    decoded_token = decode_token(access_token)
+    if decoded_token
+      is_registered = AuthService.check_user_registered(decoded_token)
+      unless is_registered
+          AuthService.register(decoded_token, access_token)
+      end
       html_content = html_content(access_token, swagger_url)
       render html: html_content.html_safe, layout: false, content_type: "text/html"
-      # redirect_to swagger_url, allow_other_host: true
     else
       render json: { error: "Error authenticating token", details: token_response }, status: :unauthorized
     end
@@ -39,6 +40,16 @@ class Api::AuthController < ApplicationController
   end
 
   private
+
+  def decode_token(token)
+    result = Auth0Client.validate_token(token)
+    if result.error
+      nil
+    else
+      result.decoded_token
+    end
+  end
+
   def auth0_login_url
     domain = ENV["AUTH0_DOMAIN"]
     client_id = ENV["AUTH0_CLIENT_ID"]

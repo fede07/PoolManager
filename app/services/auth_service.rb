@@ -56,4 +56,14 @@ class AuthService
     response = http.post(uri.path, body.to_json, headers)
     JSON.parse(response.body)
   end
+
+  def self.check_user_registered(decoded_token)
+    if decoded_token.nil?
+      return false
+    end
+    auth0_id = decoded_token.token[0]["sub"]
+    player = PlayerRepository.find_by_auth0_id(auth0_id)
+    return false if player.nil?
+    true
+  end
 end
