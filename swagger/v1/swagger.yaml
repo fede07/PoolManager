@@ -584,7 +584,7 @@ paths:
             type: string
         - name: date
           in: query
-          description: Filter matches starting from a specific date (YYYY-MM-DD format).
+          description: 'Filter matches starting from a specific date (YYYY-MM-DDTHH:MM:SS format).'
           required: false
           schema:
             type: string

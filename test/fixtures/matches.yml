@@ -1,11 +1,22 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-# This model initially had no columns defined. If you add columns to the
-# model remove the "{}" from the fixture names and add the columns immediately
-# below each fixture, per the syntax in the comments below
-#
-one: {}
-# column: value
-#
-two: {}
-# column: value
+match_one:
+  player1_id: 1
+  player2_id: 1
+  start_time: <%= Time.now - 1.hour %> # Por ejemplo, un partido iniciado hace 1 hora
+  end_time: <%= Time.now %> # Partido terminado ahora
+  table_number: 3 # Número de mesa, valor de ejemplo
+
+match_two:
+  player1_id: 3 # Otro jugador válido
+  player2_id: 4 # Otro jugador válido
+  start_time: <%= Time.now - 2.hours %> # Partido iniciado hace 2 horas
+  end_time: <%= Time.now - 1.hour %> # Terminó hace 1 hora
+  table_number: 5 # Otro número de mesa
+
+match_three:
+  player1_id: 4 # Último jugador existente en la tabla players
+  player2_id: 1 # Primer jugador existente
+  start_time: <%= Time.now - 30.minutes %> # Partido iniciado hace 30 minutos
+  end_time: <%= Time.now - 20.minutes %> # Terminó hace 20 minutos
+  table_number: 8 # Número arbitrario de mesa

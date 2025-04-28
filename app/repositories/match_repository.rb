@@ -8,11 +8,6 @@ class MatchRepository
   end
 
   def self.conflicting_matches(player_id, start_time, end_time)
-    Rails.logger.info("Finding conflicting matches")
-    Rails.logger.info(player_id)
-    Rails.logger.info(start_time)
-    Rails.logger.info(end_time)
-
     Match.where("player1_id = :player_id OR player2_id = :player_id", player_id: player_id)
          .where("start_time BETWEEN ? AND ?", start_time, end_time)
   end
@@ -49,12 +44,14 @@ class MatchRepository
 
   def self.update(match_id, updated_params)
     match = Match.find_by(id: match_id)
+    return false if match.nil?
     match.assign_attributes(updated_params)
     match.save
   end
 
   def self.delete(id)
     match = Match.find_by(id: id)
+    return false if match.nil?
     match.destroy
   end
 end

@@ -8,6 +8,18 @@ class MatchService
     player1_id = params[:player1_id]
     player2_id = params[:player2_id]
 
+    if player1_id.nil?
+      return { success: false, status: :bad_request, message: "Missing player 1" }
+    end
+
+    if player2_id.nil?
+      return { success: false, status: :bad_request, message: "Missing player 2" }
+    end
+
+    if params[:start_time].nil?
+      return { success: false, status: :bad_request, message: "Missing start time" }
+    end
+
     begin
       start_time = Time.parse(params[:start_time])
     rescue
@@ -27,10 +39,6 @@ class MatchService
       end_time = Time.parse(params[:start_time]) + DEFAULT_MATCH_DURATION
     end
 
-    if player1_id == nil || player2_id == nil || start_time == nil
-      return { success: false, status: :bad_request, message: "Missing required parameters" }
-    end
-
     if PlayerRepository.find_by_id(player1_id).nil?
       return { success: false, status: :not_found, message: "Player 1 not found" }
     end
@@ -43,7 +51,10 @@ class MatchService
       return { success: false, status: :bad_request, message: "Player cannot play against themselves" }
     end
 
-    conflict = MatchRepository.conflicting_matches(player1_id, start_time, end_time).or(MatchRepository.conflicting_matches(player2_id, start_time, end_time))
+    conflict = MatchRepository.conflicting_matches(player1_id, start_time, end_time)
+    unless conflict.present?
+      (MatchRepository.conflicting_matches(player2_id, start_time, end_time))
+    end
     if conflict.present?
       return { success: false, status: :conflict, message: "Double booking not allowed" }
     end
@@ -132,6 +143,9 @@ class MatchService
     MatchRepository.update(match_id, update_params)
     if winner_id.present?
       winner = PlayerRepository.find_by_id(winner_id)
+      if winner.nil?
+        return { success: false, status: :not_found, message: "Winner not found" }
+      end
       winner.update(ranking: winner.ranking + 1)
       PlayerRepository.update(winner)
     end
@@ -141,8 +155,7 @@ class MatchService
 
   def self.delete_match(match_id)
     match = MatchRepository.get_match(match_id)
-    Rails.logger.info("match:")
-    Rails.logger.info(match)
+
     if match.nil?
       return { success: false, status: :not_found, message: "Match not found" }
     end
