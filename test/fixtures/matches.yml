@@ -3,20 +3,20 @@
 match_one:
   player1_id: 1
   player2_id: 1
-  start_time: <%= Time.now - 1.hour %> # Por ejemplo, un partido iniciado hace 1 hora
-  end_time: <%= Time.now %> # Partido terminado ahora
-  table_number: 3 # Número de mesa, valor de ejemplo
+  start_time: <%= Time.now - 1.hour %>
+  end_time: <%= Time.now %>
+  table_number: 3
 
 match_two:
-  player1_id: 3 # Otro jugador válido
-  player2_id: 4 # Otro jugador válido
-  start_time: <%= Time.now - 2.hours %> # Partido iniciado hace 2 horas
-  end_time: <%= Time.now - 1.hour %> # Terminó hace 1 hora
-  table_number: 5 # Otro número de mesa
+  player1_id: 3
+  player2_id: 4
+  start_time: <%= Time.now - 2.hours %>
+  end_time: <%= Time.now - 1.hour %>
+  table_number: 5
 
 match_three:
-  player1_id: 4 # Último jugador existente en la tabla players
-  player2_id: 1 # Primer jugador existente
-  start_time: <%= Time.now - 30.minutes %> # Partido iniciado hace 30 minutos
-  end_time: <%= Time.now - 20.minutes %> # Terminó hace 20 minutos
-  table_number: 8 # Número arbitrario de mesa
+  player1_id: 4
+  player2_id: 1
+  start_time: <%= Time.now - 30.minutes %>
+  end_time: <%= Time.now - 20.minutes %>
+  table_number: 8

@@ -1,0 +1,24 @@
+player_one:
+  id: 1
+  auth0_id: auth0|123
+  name: John Doe
+  profile_picture_url: "default.png"
+
+player_two:
+  id: 2
+  auth0_id: auth0|456
+  name: Jane Smith
+  profile_picture_url: "default.png"
+
+player_three:
+  id: 3
+  auth0_id: auth0|789
+  name: Alice Johnson
+  profile_picture_url: "default.png"
+
+player_four:
+  id: 4
+  auth0_id: auth0|101112
+  name: Bob Brown
+  profile_picture_url: "default.png"
+
