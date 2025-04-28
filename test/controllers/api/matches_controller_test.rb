@@ -18,7 +18,7 @@ class MatchesControllerTest < ActionDispatch::IntegrationTest
     @invalid_params_invalid_time = {
       player1_id: 1,
       player2_id: 2,
-      start_time: "invalid-time",
+      start_time: "invalid-time"
     }
 
     @list_of_players = [
@@ -37,7 +37,6 @@ class MatchesControllerTest < ActionDispatch::IntegrationTest
 
     MatchRepository.stubs(:conflicting_matches).with(1, anything, anything).returns([])
     MatchRepository.stubs(:conflicting_matches).with(2, anything, anything).returns([])
-
   end
 
   test "should create match with valid params" do
