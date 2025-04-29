@@ -3,8 +3,11 @@ class Api::PlayersController < ApplicationController
 
   # POST /api/players
   def create
+    puts "player_params: #{player_params}"
     validate_permissions [ "create:players" ] do
+      puts "validating permissions"
       result = PlayerService.create_player(player_params)
+      puts "result: #{result}"
       render json: result, status: result[:status]
     end
   end
@@ -12,8 +15,8 @@ class Api::PlayersController < ApplicationController
   # GET /api/players
   def index
     validate_permissions [ "read:players" ] do
-      players = PlayerService.search_players(params[:player_name])
-      render json: players
+      result = PlayerService.search_players(params[:player_name])
+      render json: result, status: result[:status]
     end
   end
 

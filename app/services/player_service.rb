@@ -8,7 +8,8 @@ class PlayerService
   end
 
   def self.search_players(player_name)
-    PlayerRepository.all_players(player_name)
+    result = PlayerRepository.all_players(player_name)
+    { success: true, status: :ok, players: result }
   end
 
   def self.create_player(params)
@@ -17,7 +18,11 @@ class PlayerService
       return { success: false, status: :conflict, message: "Player already exists" }
     end
     new_player = PlayerRepository.create(params)
-    { success: true, status: :created, player: new_player }
+    if new_player
+      { success: true, status: :created, player: new_player }
+    else
+      { success: false, status: :bad_request, errors: new_player.errors.full_messages }
+    end
   end
 
   def self.update_player(player_id, updated_params)
