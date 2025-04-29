@@ -36,7 +36,7 @@ gem "thruster", require: false
 # gem "rack-cors"
 
 gem "auth0", "~> 5.0"
-gem "aws-sdk-s3", "~> 1.0"
+gem "aws-sdk-s3", "~> 1.184"
 gem "rack-cors", "~> 1.0"
 gem "dotenv-rails", groups: [ :development, :test ]
 gem "jwt"
