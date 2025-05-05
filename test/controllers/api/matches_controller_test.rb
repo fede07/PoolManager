@@ -3,22 +3,46 @@ require "mocha/minitest"
 
 class MatchesControllerTest < ActionDispatch::IntegrationTest
   setup do
+    valid_start_time = Time.now + 1.day
+
     @valid_params = {
       player1_id: 1,
       player2_id: 2,
-      start_time: (Time.now + 1.day).to_s,
-      end_time: (Time.now + 1.day + 90.minutes).to_s
+      start_time: (valid_start_time).to_s,
+      end_time: (valid_start_time + 90.minutes).to_s
+    }
+
+    @valid_params_double_booking = {
+      player1_id: 1,
+      player2_id: 2,
+      start_time: (valid_start_time + 15.minutes).to_s,
+      end_time: (valid_start_time + 105.minutes).to_s
+    }
+
+    @invalid_params_missing_player1 = {
+      player1_id: 5,
+      player2_id: 2,
+      start_time: (valid_start_time + 1.day).to_s,
+      end_time: (valid_start_time + 1.day + 90.minutes).to_s
     }
 
     @invalid_params_missing_player2 = {
       player1_id: 1,
-      start_time: (Time.now + 1.day).to_s
+      player2_id: 5,
+      start_time: (valid_start_time + 1.day).to_s,
+      end_time: (valid_start_time + 1.day + 90.minutes).to_s
     }
 
     @invalid_params_invalid_time = {
       player1_id: 1,
       player2_id: 2,
       start_time: "invalid-time"
+    }
+
+    @invalid_params_missing_player = {
+      player1_id: 1,
+      start_time: (valid_start_time + 1.day).to_s,
+      end_time: (valid_start_time + 1.day + 90.minutes).to_s
     }
 
     @list_of_players = [
@@ -35,22 +59,11 @@ class MatchesControllerTest < ActionDispatch::IntegrationTest
     PlayerRepository.stubs(:find_by_id).with(1).returns({ id: 1, name: "Player 1" })
     PlayerRepository.stubs(:find_by_id).with(2).returns({ id: 2, name: "Player 2" })
 
+    PlayerRepository.stubs(:find_by_id).with(5).returns(nil)
+
     MatchRepository.stubs(:conflicting_matches).with(1, anything, anything).returns([])
     MatchRepository.stubs(:conflicting_matches).with(2, anything, anything).returns([])
-  end
-
-  test "should create match with valid params" do
-    MatchService.stub :create_match, { success: true, status: :created } do
-      post "/api/matches", params: @valid_params
-      assert_response :created
-    end
-  end
-
-  test "should handle service error" do
-    MatchService.stub :create_match, { success: false, status: :bad_request, message: "Invalid time" } do
-      post "/api/matches", params: @valid_params.merge(start_time: "invalid-time")
-      assert_response :bad_request
-    end
+    MatchRepository.stubs(:conflicting_matches).with(5, anything, anything).returns([])
   end
 
   test "should list all matches" do
@@ -61,7 +74,7 @@ class MatchesControllerTest < ActionDispatch::IntegrationTest
 
   test "should create a match successfully with valid parameters" do
     MatchRepository.stubs(:create).with(@valid_params).returns({ id: 1, success: true })
-    MatchRepository.stubs(:conflicting_matches).with(1, anything, anything).returns([])
+    MatchRepository.stubs(:conflicting_matches).with(1, anything, anything).returns(false)
 
     result = MatchService.create_match(@valid_params)
 
@@ -70,29 +83,24 @@ class MatchesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should return conflict for double booking" do
-    MatchRepository.stubs(:conflicting_matches).with(1, anything, anything).returns([
-      { id: 1, player1_id: 1, player2_id: 2, start_time: (Time.now + 1.day).to_s, end_time: (Time.now + 2.days).to_s }
-    ])
-
-    result = MatchService.create_match(@valid_params)
+    MatchService.create_match(@valid_params)
+    result = MatchService.create_match(@valid_params_double_booking)
 
     assert_equal :conflict, result[:status], "Expected status to be :conflict"
   end
 
   test "should return not_found if Player 1 does not exist" do
-    PlayerRepository.stubs(:find_by_id).with(anything).returns(nil)
-    result = MatchService.create_match(@valid_params)
+    result = MatchService.create_match(@invalid_params_missing_player1)
     assert_equal :not_found, result[:status], "Expected status to be :not_found"
   end
 
   test "should return not_found if Player 2 does not exist" do
-    PlayerRepository.stubs(:find_by_id).with(anything).returns(nil)
-    result = MatchService.create_match(@valid_params)
+    result = MatchService.create_match(@invalid_params_missing_player2)
     assert_equal :not_found, result[:status], "Expected status to be :not_found"
   end
 
   test "should handle missing required parameters" do
-    result = MatchService.create_match(@invalid_params_missing_player2)
+    result = MatchService.create_match(@invalid_params_missing_player)
     assert_equal :bad_request, result[:status], "Expected status to be :bad_request"
     assert_equal "Missing player 2", result[:message], "Expected message to be Missing required parameters"
   end

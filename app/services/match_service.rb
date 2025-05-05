@@ -1,10 +1,7 @@
 class MatchService
-  DEFAULT_MATCH_DURATION = 90.minutes
+  DEFAULT_MATCH_DURATION = 30.minutes
 
   def self.create_match(params)
-    Rails.logger.info("Creating match")
-    Rails.logger.info(params)
-
     player1_id = params[:player1_id]
     player2_id = params[:player2_id]
 
@@ -39,6 +36,9 @@ class MatchService
       end_time = Time.parse(params[:start_time]) + DEFAULT_MATCH_DURATION
     end
 
+    params[:start_time] = start_time
+    params[:end_time] = end_time
+
     if PlayerRepository.find_by_id(player1_id).nil?
       return { success: false, status: :not_found, message: "Player 1 not found" }
     end
@@ -52,10 +52,10 @@ class MatchService
     end
 
     conflict = MatchRepository.conflicting_matches(player1_id, start_time, end_time)
-    unless conflict.present?
+    unless conflict
       (MatchRepository.conflicting_matches(player2_id, start_time, end_time))
     end
-    if conflict.present?
+    if conflict
       return { success: false, status: :conflict, message: "Double booking not allowed" }
     end
     MatchRepository.create(params)

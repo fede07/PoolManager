@@ -8,8 +8,9 @@ class MatchRepository
   end
 
   def self.conflicting_matches(player_id, start_time, end_time)
-    Match.where("player1_id = :player_id OR player2_id = :player_id", player_id: player_id)
-         .where("start_time BETWEEN ? AND ?", start_time, end_time)
+    conflict = Match.where("player1_id = :player_id OR player2_id = :player_id", player_id: player_id)
+                    .where("(start_time <= :end_time AND end_time >= :start_time)", start_time: start_time, end_time: end_time)
+    conflict.exists?
   end
 
   def self.filtered_matches(date: nil, status: nil, player_id: nil)

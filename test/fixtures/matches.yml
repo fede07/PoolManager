@@ -1,20 +1,20 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-match_one:
+1:
   player1_id: 1
   player2_id: 1
   start_time: <%= Time.now - 1.hour %>
   end_time: <%= Time.now %>
   table_number: 3
 
-match_two:
+2:
   player1_id: 3
   player2_id: 4
   start_time: <%= Time.now - 2.hours %>
   end_time: <%= Time.now - 1.hour %>
   table_number: 5
 
-match_three:
+3:
   player1_id: 4
   player2_id: 1
   start_time: <%= Time.now - 30.minutes %>
