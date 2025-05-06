@@ -1,6 +1,6 @@
 class PlayerRepository
   def self.find_by_auth0_id(auth0_id)
-    Player.find_by(auth0_id: auth0_id)
+    Player.unscoped.find_by(auth0_id: auth0_id)
   end
 
   def self.all_players(player_name = nil)
@@ -18,7 +18,7 @@ class PlayerRepository
   end
 
   def self.destroy(player)
-    player.destroy
+    player.soft_delete
   end
 
   def self.find_by_id(id)

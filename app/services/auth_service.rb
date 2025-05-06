@@ -3,6 +3,10 @@ class AuthService
     auth0_id = decoded_token.token[0]["sub"]
 
     existing_player = PlayerRepository.find_by_auth0_id(auth0_id)
+    if existing_player && existing_player.deleted == true
+      existing_player.update(deleted: false)
+      return { success: true, status: :created, player: existing_player }
+    end
     return { success: false, status: :conflict, message: "Player already exists" } if existing_player
 
     user_info = fetch_user_info(token)
@@ -64,6 +68,10 @@ class AuthService
     auth0_id = decoded_token.token[0]["sub"]
     player = PlayerRepository.find_by_auth0_id(auth0_id)
     return false if player.nil?
+    if player.deleted == true
+      Rails.logger.info("deleted!!!!")
+      return false
+    end
     true
   end
 end

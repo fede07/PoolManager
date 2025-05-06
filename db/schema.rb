@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_02_194401) do
+ActiveRecord::Schema[8.0].define(version: 2025_05_06_140034) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -23,6 +23,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_02_194401) do
     t.integer "table_number"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "deleted", default: false
     t.index ["player1_id"], name: "index_matches_on_player1_id"
     t.index ["player2_id"], name: "index_matches_on_player2_id"
     t.index ["winner_id"], name: "index_matches_on_winner_id"
@@ -36,6 +37,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_02_194401) do
     t.string "profile_picture_url", default: "", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "deleted", default: false
     t.index ["auth0_id"], name: "index_players_on_auth0_id", unique: true
   end
 

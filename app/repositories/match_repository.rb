@@ -53,6 +53,6 @@ class MatchRepository
   def self.delete(id)
     match = Match.find_by(id: id)
     return false if match.nil?
-    match.destroy
+    match.soft_delete
   end
 end
